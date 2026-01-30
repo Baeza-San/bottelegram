@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Horario & Recordatorios</title>
+<style>
+:root{--bg:#0f172a;--card:#111827;--accent:#38bdf8;--text:#e5e7eb;--muted:#94a3b8}
+*{box-sizing:border-box}body{margin:0;font-family: system-ui, -apple-system, BlinkMacSystemFont;background:linear-gradient(135deg,#020617,#0f172a);color:var(--text)}
+header{padding:20px;text-align:center;background:#020617;border-bottom:1px solid #1e293b}
+header h1{margin:0;color:var(--accent)}
+main{max-width:1000px;margin:auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.section{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 0 25px rgba(0,0,0,.4)}
+.section h2{margin-top:0;font-size:1.2rem;color:var(--accent);border-bottom:1px solid #1e293b;padding-bottom:8px}
+.card{background:#020617;border-radius:10px;padding:12px;margin:10px 0;font-size:.9rem}
+small{color:var(--muted)}
+input, select, button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#020617;color:var(--text)}
+button{background:var(--accent);color:#020617;font-weight:600;cursor:pointer}
+button:hover{opacity:.85}
+.footer{text-align:center;padding:15px;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><h1>📚 Control Escolar</h1><small>Horario · Recordatorios · Notas</small></header>
+<main>
+<section class="section"><h2>📅 Horario</h2><div id="horario"></div></section>
+<section class="section"><h2>⏰ Recordatorios</h2>
+<select id="materia"></select>
+<input id="nota" placeholder="Nota">
+<input type="date" id="fecha">
+<input type="time" id="hora">
+<button onclick="guardarRecordatorio()">Guardar</button>
+<div id="recordatorios"></div></section>
+<section class="section"><h2>📝 Notas</h2>
+<select id="materiaNota"></select>
+<input id="notaTexto" placeholder="Escribe una nota">
+<button onclick="guardarNota()">Guardar</button>
+<div id="notas"></div></section>
+</main>
+<div class="footer">Bot académico · Express + Telegram</div>
+<script>
+fetch("/api/horario").then(r=>r.json()).then(data=>{
+  let html="";
+  Object.keys(data).forEach(dia=>{
+    html+=`<div class="card"><b>${dia}</b><br>`;
+    data[dia].forEach(c=>{html+=`<small>${c.inicio} - ${c.fin}</small><br>${c.materia}<br>`});
+    html+="</div>";
+  });
+  document.getElementById("horario").innerHTML=html;
+  const materias=[...new Set(Object.values(data).flat().map(c=>c.materia))];
+  materias.forEach(m=>{
+    document.getElementById("materia").innerHTML+=`<option>${m}</option>`;
+    document.getElementById("materiaNota").innerHTML+=`<option>${m}</option>`;
+  });
+});
+
+function cargarRecordatorios(){
+  fetch("/api/recordatorios").then(r=>r.json()).then(data=>{
+    document.getElementById("recordatorios").innerHTML=data.map(r=>`<div class="card"><small>${r.fecha} · ${r.hora}</small><br><b>${r.materia}</b><br>${r.nota}</div>`).join("");
+  });
+}
+
+function guardarRecordatorio(){
+  fetch("/api/recordatorios",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      materia: document.getElementById("materia").value,
+      nota: document.getElementById("nota").value,
+      fecha: document.getElementById("fecha").value,
+      hora: document.getElementById("hora").value
+    })
+  }).then(cargarRecordatorios);
+}
+
+function cargarNotas(){
+  fetch("/api/notas").then(r=>r.json()).then(data=>{
+    document.getElementById("notas").innerHTML=data.map(n=>`<div class="card"><b>${n.materia}</b><br>${n.nota}</div>`).join("");
+  });
+}
+
+function guardarNota(){
+  fetch("/api/notas",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      materia: document.getElementById("materiaNota").value,
+      nota: document.getElementById("notaTexto").value
+    })
+  }).then(cargarNotas);
+}
+
+cargarNotas();
+cargarRecordatorios();
+</script>
+</body>
+</html>

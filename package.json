@@ -1,0 +1,14 @@
+{
+  "name": "horario-telegram",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.4",
+    "express": "^4.22.1",
+    "node-cron": "^4.2.1",
+    "node-telegram-bot-api": "^0.63.0"
+  }
+}
